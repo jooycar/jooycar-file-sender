@@ -1,0 +1,5 @@
+node_modules/
+coverage/
+package.json
+package-lock.json
+nyc.config.js

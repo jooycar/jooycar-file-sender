@@ -1,0 +1,16 @@
+node_modules/
+tmp/
+config/
+.vscode
+launch.json
+*.log
+.DS_Store
+coverage
+.idea/
+.aws-sam/
+.nyc_output/
+coverage/
+lambda.zip
+main.js
+main-data.json
+.handlers_configs/

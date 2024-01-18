@@ -1,0 +1,42 @@
+{
+  "name": "jooycar-file-sender",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_ENV=test mocha --exit",
+    "coverage": "NODE_ENV=test nyc --all --reporter=html npm run test && open ./coverage/index.html",
+    "ci-coverage": "NODE_ENV=test nyc --all --reporter=text-summary  --reporter=lcov npm run test --exit"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.490.0",
+    "@aws-sdk/client-s3": "^3.490.0",
+    "@aws-sdk/client-secrets-manager": "^3.491.0",
+    "aws-lambda-starter": "github:jooycar/aws-lambda-starter",
+    "config": "^3.3.10",
+    "ms-lib": "github:jooycar/ms-lib",
+    "sftp-upload": "^1.0.4"
+  },
+  "devDependencies": {
+    "aws-sdk-client-mock": "^2.1.1",
+    "chai": "^4.3.7",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^8.33.0",
+    "eslint-config-jooycar": "1.0.1",
+    "mocha": "^10.2.0",
+    "nyc": "^15.1.0",
+    "sinon": "^15.0.1",
+    "sinon-chai": "^3.7.0"
+  },
+  "nyc": {
+    "include": [
+      "src/**/*.js"
+    ],
+    "reporter": [
+      "cobertura",
+      "text"
+    ]
+  }
+}
