@@ -4,7 +4,7 @@ WORKDIR /asset
 
 ARG HANDLER
 
-COPY deploy-config/${HANDLER}/ ./config/
+COPY deploy-config/jooycar-file-reader/${HANDLER}/ ./config/
 COPY package.json ./
 COPY index.js ./
 COPY package.json ./

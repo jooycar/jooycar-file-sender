@@ -6,12 +6,14 @@ export const LAYERS_VERSIONS = new Map([
     msLib: 15,
     standards: 12,
     sftpUpload: 9,
+    lambdaStarter: 5
   } ],
   [ 'qa', {
     awsSdk3S3: 10,
     msLib: 15,
     standards: 12,
     sftpUpload: 9,
+    lambdaStarter: 5
   } ],
 ])
 export const SHORT_ENVIRONMENTS = new Map([
@@ -22,4 +24,5 @@ export interface CustomProps extends cdk.StackProps {
     environment: string;
     vpcId: string;
     applicationName: string;
+    securityGroupId: string;
 }

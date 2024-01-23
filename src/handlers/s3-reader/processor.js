@@ -32,7 +32,7 @@ module.exports = async deps => {
       secret,
     }
     const command = new InvokeCommand({
-      FunctionName: strategies[ strategy ],
+      FunctionName: strategies[ 0 ][ strategy ],
       InvocationType: 'RequestResponse',
       Payload: JSON.stringify( lambdaPayload ),
     })
@@ -42,7 +42,6 @@ module.exports = async deps => {
         new TextDecoder( 'utf-8' ).decode( response.Payload ),
       )
       const { body } = resultStart
-      // send metadadata less aws secrets
 
       const reportLog = new ReportLogs({
         status: 'success',

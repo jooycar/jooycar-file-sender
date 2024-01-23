@@ -8,8 +8,8 @@ module.exports = {
 
     const deps = {
       config: require( 'config' ),
-      s3Client: require( '@aws-sdk/client-s3' ),
       msLibDeps,
+      luxon: require( 'luxon' ),
     }
 
     return deps

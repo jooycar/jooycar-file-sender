@@ -7,6 +7,7 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
 import { CustomProps, SHORT_ENVIRONMENTS } from './custom-props'
 import { s3Reader } from './s3-reader'
 import { sftpSender } from './sftp-sender'
+import { zurichReportTrigger } from './zurich-report-trigger'
 
 export class InfrastructureStack extends cdk.Stack {
   constructor( scope: cdk.App, id: string, props: CustomProps ) {
@@ -14,7 +15,7 @@ export class InfrastructureStack extends cdk.Stack {
     const region = this.region
     const accountId = this.account
 
-    const { vpcId, applicationName, environment } = props
+    const { vpcId, applicationName, environment, securityGroupId } = props
 
     const privateVpc = aws_ec2.Vpc.fromLookup( this, 'jooycar-vpc', {
       vpcId: vpcId,
@@ -27,15 +28,19 @@ export class InfrastructureStack extends cdk.Stack {
       secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-secret-redis`, `${SHORT_ENVIRONMENTS.get( environment )}__redis_url` ),
     ]
 
+    const securityGroup = aws_ec2.SecurityGroup.fromSecurityGroupId( this, 'ppm-sg', securityGroupId )
+
     new s3Reader( this, `${applicationName}-s3-reader-lambda`, {
       environment: props.environment,
       vpcId,
       applicationName,
+      securityGroupId,
       account: accountId,
       region,
       vpc: privateVpc,
       dataSecretsBucket,
       secrets,
+      securityGroup
 
     })
     const sftpSecrets = [
@@ -44,11 +49,27 @@ export class InfrastructureStack extends cdk.Stack {
     new sftpSender( this, `${applicationName}-sftp-sender-lambda`, {
       environment: props.environment,
       vpcId,
+      securityGroupId,
       applicationName,
       account: accountId,
       region,
       vpc: privateVpc,
       sftpSecrets,
+      securityGroup
     })
+    new zurichReportTrigger( this, `${applicationName}-zurich-report-trigger-lambda`, {
+      environment: props.environment,
+      vpcId,
+      securityGroupId,
+      applicationName,
+      account: accountId,
+      region,
+      vpc: privateVpc,
+      dataSecretsBucket,
+      secrets,
+      securityGroup
+    })
+
+
   }
 }
