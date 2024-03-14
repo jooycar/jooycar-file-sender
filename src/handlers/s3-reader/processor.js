@@ -9,7 +9,7 @@ module.exports = async deps => {
   const lambda = new LambdaClient({ })
   const ReportLogs = M.models.model( 'ReportLogs' )
   const processEvent = async payload => {
-    const { s3: { bucket, key }, strategy, metadata, secret } = payload
+    const { s3: { bucket, key }, strategy, metadata, secret, encoding = undefined } = payload
     //get file from s3
     const { data, error } = await get( bucket, key )
     if ( error ) {
@@ -24,7 +24,7 @@ module.exports = async deps => {
     //create file
 
     //get file content as csv
-    const file = await data.Body.transformToString()
+    const file = await data.Body.transformToString( encoding )
     //invoke lambda
     const lambdaPayload = {
       file,

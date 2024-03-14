@@ -31,17 +31,17 @@ export class zurichReportTrigger extends Construct {
     const sftpUpload = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-sftpUpload', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-sftpUpload:${LAYERS_VERSIONS.get( props.environment )?.sftpUpload}` )
     const lambdaStarterLayer = aws_lambda.LayerVersion.fromLayerVersionArn(
       this,
-      "lambda-layers-lambdaStarter",
+      'lambda-layers-lambdaStarter',
       `arn:aws:lambda:${region}:${account}:layer:lambda-layers-lambdaStarter:${
-          LAYERS_VERSIONS.get(props.environment)?.lambdaStarter
-      }`
-      );
+        LAYERS_VERSIONS.get( props.environment )?.lambdaStarter
+      }`,
+    )
     const layers = [
       lambdaStarterMsLib,
       awsSdk3S3Layer,
       standardsLayer,
       sftpUpload,
-      lambdaStarterLayer
+      lambdaStarterLayer,
     ]
 
     const s3ReaderLambda = aws_lambda.Function.fromFunctionArn( this, 's3-reader', `arn:aws:lambda:${region}:${account}:function:${applicationName}-s3-reader-${SHORT_ENVIRONMENTS.get( props.environment )}` )
@@ -51,13 +51,14 @@ export class zurichReportTrigger extends Construct {
       code: aws_lambda.Code.fromDockerBuild( path.join( __dirname, '../../..' ), {
         buildArgs: {
           HANDLER: 'zurich-report-trigger',
+          HANDLER_ENVIRONMENT: `${SHORT_ENVIRONMENTS.get( props.environment )}`,
         },
       }),
       handler: 'index.handler',
       timeout: cdk.Duration.minutes( 5 ),
       memorySize: 2048,
       vpc,
-      securityGroups: [props.securityGroup,],
+      securityGroups: [ props.securityGroup ],
       layers: layers,
       allowPublicSubnet: false,
       vpcSubnets: { onePerAz: true },
@@ -67,7 +68,6 @@ export class zurichReportTrigger extends Construct {
     const rule = new cdk.aws_events.Rule( this, 'zurich-report-trigger-rule', {
       schedule: cdk.aws_events.Schedule.cron({ minute: '0', hour: '14' }),
     })
-    rule.addTarget( new cdk.aws_events_targets.LambdaFunction( lambda ) )
-
+    rule.addTarget( new cdk.aws_events_targets.LambdaFunction( lambda ))
   }
 }
