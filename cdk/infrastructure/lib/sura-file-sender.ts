@@ -39,6 +39,12 @@ export class suraFileSender extends Construct {
       lambdaStarterLayer,
     ]
 
+    const LogGroup = new cdk.aws_logs.LogGroup( this, `${applicationName}-sura-file-sender-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
+      logGroupName: `/aws/lambda/${applicationName}-sura-file-sender-${SHORT_ENVIRONMENTS.get( props.environment )}`,
+      retention: cdk.aws_logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    })
+
     const lambda = new aws_lambda.Function( this, `${applicationName}-sura-file-sender-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
       functionName: `${applicationName}-sura-file-sender-${SHORT_ENVIRONMENTS.get( props.environment )}`,
       runtime: aws_lambda.Runtime.NODEJS_18_X,
@@ -57,6 +63,9 @@ export class suraFileSender extends Construct {
       allowPublicSubnet: false,
       vpcSubnets: { onePerAz: true },
     })
+
+    LogGroup.grantWrite( lambda )
+
     for ( const secret of secrets )
       secret.grantRead( lambda )
   }

@@ -43,6 +43,12 @@ export class suraEeccTrigger extends Construct {
       lambdaStarterLayer,
     ]
 
+    const LogGroup = new cdk.aws_logs.LogGroup( this, `${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
+      logGroupName: `/aws/lambda/${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}`,
+      retention: cdk.aws_logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    })
+
     const s3ReaderLambda = aws_lambda.Function.fromFunctionArn( this, 's3-reader', `arn:aws:lambda:${region}:${account}:function:${applicationName}-s3-reader-${SHORT_ENVIRONMENTS.get( props.environment )}` )
     const lambda = new aws_lambda.Function( this, `${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
       functionName: `${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}`,
@@ -63,6 +69,7 @@ export class suraEeccTrigger extends Construct {
       vpcSubnets: { onePerAz: true },
     })
     s3ReaderLambda.grantInvoke( lambda )
+    LogGroup.grantWrite( lambda )
     // add event bridge rule to trigger lambda every day at 6am chilean time
     const rule = new cdk.aws_events.Rule( this, 'sura-eecc-trigger-rule', {
       schedule: cdk.aws_events.Schedule.cron( paramsEventRule ),
