@@ -28,6 +28,7 @@ export class InfrastructureStack extends cdk.Stack {
 
     const secrets = [
       secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-secret-mongo`, `${SHORT_ENVIRONMENTS.get( environment )}__mongodb_url__rw` ),
+      secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-secret-mongo`, `${SHORT_ENVIRONMENTS.get( environment )}__mongodb_url__ro` ),
       secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-secret-redis`, `${SHORT_ENVIRONMENTS.get( environment )}__redis_url` ),
     ]
 
