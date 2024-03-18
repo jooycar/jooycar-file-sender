@@ -6,7 +6,7 @@ ARG HANDLER
 ARG HANDLER_ENVIRONMENT=$HANDLER_ENVIRONMENT
 
 
-COPY deploy-config/jooycar-file-reader/${HANDLER}/"${HANDLER_ENVIRONMENT}" ./config/
+COPY .deploy-config/jooycar-file-reader/${HANDLER}/"${HANDLER_ENVIRONMENT}" ./config/
 COPY package.json ./
 COPY index.js ./
 COPY package.json ./

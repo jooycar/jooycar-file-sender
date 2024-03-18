@@ -153,5 +153,8 @@
   },
   "key-provider:account=322378146819:aliasName=alias/aws/sqs:region=us-east-1": {
     "keyId": "fa3edc0e-4f9b-47ff-99ba-0549282cb247"
-  }
+  },
+  "acknowledged-issue-numbers": [
+    29483
+  ]
 }

@@ -43,13 +43,14 @@ export class suraEeccTrigger extends Construct {
       lambdaStarterLayer,
     ]
 
-    const LogGroup = new cdk.aws_logs.LogGroup( this, `${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
+    const LogGroup = new cdk.aws_logs.LogGroup( this, `${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}-log-group`, {
       logGroupName: `/aws/lambda/${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}`,
       retention: cdk.aws_logs.RetentionDays.ONE_MONTH,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     })
 
     const s3ReaderLambda = aws_lambda.Function.fromFunctionArn( this, 's3-reader', `arn:aws:lambda:${region}:${account}:function:${applicationName}-s3-reader-${SHORT_ENVIRONMENTS.get( props.environment )}` )
+
     const lambda = new aws_lambda.Function( this, `${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
       functionName: `${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}`,
       runtime: aws_lambda.Runtime.NODEJS_18_X,

@@ -39,7 +39,7 @@ export class suraFileSender extends Construct {
       lambdaStarterLayer,
     ]
 
-    const LogGroup = new cdk.aws_logs.LogGroup( this, `${applicationName}-sura-file-sender-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
+    const LogGroup = new cdk.aws_logs.LogGroup( this, `${applicationName}-sura-file-sender-${SHORT_ENVIRONMENTS.get( props.environment )}-log-group`, {
       logGroupName: `/aws/lambda/${applicationName}-sura-file-sender-${SHORT_ENVIRONMENTS.get( props.environment )}`,
       retention: cdk.aws_logs.RetentionDays.ONE_MONTH,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
