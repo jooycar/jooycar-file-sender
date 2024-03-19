@@ -25,7 +25,7 @@ module.exports = async deps => {
         }
       } catch ( error ) {
         console.error( error )
-        await sleep( 1000 )
+        await sleep( 500 )
 
         if ( i === retries ) {
           const reportLog = new ReportLogs({
