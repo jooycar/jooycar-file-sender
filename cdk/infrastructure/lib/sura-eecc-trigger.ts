@@ -61,7 +61,7 @@ export class suraEeccTrigger extends Construct {
         },
       }),
       handler: 'index.handler',
-      timeout: cdk.Duration.minutes( 5 ),
+      timeout: cdk.Duration.minutes( 10 ),
       memorySize: 2048,
       vpc,
       securityGroups: [ props.securityGroup ],
