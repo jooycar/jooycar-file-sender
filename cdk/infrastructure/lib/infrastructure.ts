@@ -7,6 +7,8 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
 import { CustomProps, SHORT_ENVIRONMENTS } from './custom-props'
 import { s3Reader } from './s3-reader'
 import { sftpSender } from './sftp-sender'
+import { suraEeccTrigger } from './sura-eecc-trigger'
+import { suraFileSender } from './sura-file-sender'
 import { zurichReportTrigger } from './zurich-report-trigger'
 
 export class InfrastructureStack extends cdk.Stack {
@@ -21,10 +23,12 @@ export class InfrastructureStack extends cdk.Stack {
       vpcId: vpcId,
     })
 
-    const dataSecretsBucket = s3.Bucket.fromBucketName( this, `${applicationName}-documents-bucket`, 'jooycar-data-secrets-prod' )
+    const dataSecretsBucket = s3.Bucket.fromBucketName( this, `${applicationName}-documents-bucket`, `jooycar-data-secrets-${SHORT_ENVIRONMENTS.get( environment )}` )
+    const pdfBuilderBucket = s3.Bucket.fromBucketName( this, `${applicationName}-pdf-builder-bucket`, `pdf-builder-${SHORT_ENVIRONMENTS.get( environment )}-documents` )
 
     const secrets = [
       secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-secret-mongo`, `${SHORT_ENVIRONMENTS.get( environment )}__mongodb_url__rw` ),
+      secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-secret-mongo-ro`, `${SHORT_ENVIRONMENTS.get( environment )}__mongodb_url__ro` ),
       secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-secret-redis`, `${SHORT_ENVIRONMENTS.get( environment )}__redis_url` ),
     ]
 
@@ -39,8 +43,9 @@ export class InfrastructureStack extends cdk.Stack {
       region,
       vpc: privateVpc,
       dataSecretsBucket,
+      pdfBuilderBucket,
       secrets,
-      securityGroup
+      securityGroup,
 
     })
     const sftpSecrets = [
@@ -55,7 +60,18 @@ export class InfrastructureStack extends cdk.Stack {
       region,
       vpc: privateVpc,
       sftpSecrets,
-      securityGroup
+      securityGroup,
+    })
+    new suraFileSender( this, `${applicationName}-sura-file-sender-lambda`, {
+      environment: props.environment,
+      vpcId,
+      securityGroupId,
+      applicationName,
+      account: accountId,
+      region,
+      vpc: privateVpc,
+      secrets,
+      securityGroup,
     })
     new zurichReportTrigger( this, `${applicationName}-zurich-report-trigger-lambda`, {
       environment: props.environment,
@@ -67,9 +83,20 @@ export class InfrastructureStack extends cdk.Stack {
       vpc: privateVpc,
       dataSecretsBucket,
       secrets,
-      securityGroup
+      securityGroup,
     })
-
-
+    new suraEeccTrigger( this, `${applicationName}-sura-eecc-trigger-lambda`, {
+      environment: props.environment,
+      vpcId,
+      securityGroupId,
+      applicationName,
+      account: accountId,
+      region,
+      vpc: privateVpc,
+      dataSecretsBucket,
+      secrets,
+      securityGroup,
+      paramsEventRule: { minute: '00', hour: '09', day: '07', month: '*', year: '*' },
+    })
   }
 }

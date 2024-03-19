@@ -15,6 +15,7 @@ export interface s3ReaderProps extends CustomProps {
     account: string;
     vpc: ec2.IVpc;
     dataSecretsBucket: s3.IBucket;
+    pdfBuilderBucket: s3.IBucket;
     secrets: secretsmanager.ISecret[],
     securityGroup: ec2.ISecurityGroup
 }
@@ -23,47 +24,54 @@ export class s3Reader extends Construct {
 
   constructor( scope: Construct, id: string, props: s3ReaderProps ) {
     super( scope, id )
-    const { vpc, applicationName, region, account, dataSecretsBucket, secrets } = props
+    const { vpc, applicationName, region, account, dataSecretsBucket, pdfBuilderBucket, secrets } = props
 
     const lambdaStarterMsLib = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-ms-lib', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-ms-lib:${LAYERS_VERSIONS.get( props.environment )?.msLib}` )
     const awsSdk3S3Layer = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-aws-sdk3-s3', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-aws-sdk3-s3:${LAYERS_VERSIONS.get( props.environment )?.awsSdk3S3}` )
     const standardsLayer = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-standards', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-standards:${LAYERS_VERSIONS.get( props.environment )?.standards}` )
     const sftpUpload = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-sftpUpload', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-sftpUpload:${LAYERS_VERSIONS.get( props.environment )?.sftpUpload}` )
+
     const lambdaStarterLayer = aws_lambda.LayerVersion.fromLayerVersionArn(
       this,
-      "lambda-layers-lambdaStarter",
+      'lambda-layers-lambdaStarter',
       `arn:aws:lambda:${region}:${account}:layer:lambda-layers-lambdaStarter:${
-          LAYERS_VERSIONS.get(props.environment)?.lambdaStarter
-      }`
-      );
+        LAYERS_VERSIONS.get( props.environment )?.lambdaStarter
+      }`,
+    )
+
     const layers = [
       lambdaStarterMsLib,
       awsSdk3S3Layer,
       standardsLayer,
       sftpUpload,
-      lambdaStarterLayer
+      lambdaStarterLayer,
     ]
 
     const sftpLambda = aws_lambda.Function.fromFunctionArn( this, 'sftp-sender', `arn:aws:lambda:${region}:${account}:function:${applicationName}-sftp-sender-${SHORT_ENVIRONMENTS.get( props.environment )}` )
+    const suraFileLambda = aws_lambda.Function.fromFunctionArn( this, 'sura-file-sender', `arn:aws:lambda:${region}:${account}:function:${applicationName}-sura-file-sender-${SHORT_ENVIRONMENTS.get( props.environment )}` )
+
     const lambda = new aws_lambda.Function( this, `${applicationName}-s3-reader-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
       functionName: `${applicationName}-s3-reader-${SHORT_ENVIRONMENTS.get( props.environment )}`,
       runtime: aws_lambda.Runtime.NODEJS_18_X,
       code: aws_lambda.Code.fromDockerBuild( path.join( __dirname, '../../..' ), {
         buildArgs: {
           HANDLER: 's3-reader',
+          HANDLER_ENVIRONMENT: `${SHORT_ENVIRONMENTS.get( props.environment )}`,
         },
       }),
       handler: 'index.handler',
       timeout: cdk.Duration.minutes( 5 ),
       memorySize: 2048,
       vpc,
-      securityGroups: [props.securityGroup,],
+      securityGroups: [ props.securityGroup ],
       layers: layers,
       allowPublicSubnet: false,
       vpcSubnets: { onePerAz: true },
     })
     sftpLambda.grantInvoke( lambda )
+    suraFileLambda.grantInvoke( lambda )
     dataSecretsBucket.grantReadWrite( lambda )
+    pdfBuilderBucket.grantRead( lambda )
     for ( const secret of secrets )
       secret.grantRead( lambda )
   }

@@ -15,3 +15,4 @@ main.js
 main-data.json
 .handlers_configs/
 cdk.out/
+.deploy-config

@@ -1,9 +1,10 @@
 {
   "name": "jooycar-file-sender",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon main.js",
     "test": "NODE_ENV=test mocha --exit",
     "coverage": "NODE_ENV=test nyc --all --reporter=html npm run test && open ./coverage/index.html",
     "ci-coverage": "NODE_ENV=test nyc --all --reporter=text-summary  --reporter=lcov npm run test --exit"
@@ -17,6 +18,7 @@
     "aws-lambda-starter": "github:jooycar/aws-lambda-starter",
     "config": "^3.3.10",
     "ms-lib": "github:jooycar/ms-lib",
+    "ramda": "^0.28.0",
     "sftp-upload": "^1.0.4"
   },
   "devDependencies": {
