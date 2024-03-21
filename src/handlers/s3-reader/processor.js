@@ -32,7 +32,7 @@ module.exports = async deps => {
       secret,
     }
     const command = new InvokeCommand({
-      FunctionName: strategies[ 0 ][ strategy ],
+      FunctionName: strategies[ strategy ],
       InvocationType: 'RequestResponse',
       Payload: JSON.stringify( lambdaPayload ),
     })

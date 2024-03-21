@@ -61,7 +61,7 @@ module.exports = async deps => {
     }
 
     try {
-      const balances = await Balance.find( query ).select([ 'amount', 'refId' ]).sort({ _id: 1 }).limit( 5 ).lean()
+      const balances = await Balance.find( query ).select([ 'amount', 'refId' ]).sort({ _id: 1 }).lean()
       if ( !balances || balances.length === 0 ) return { response: { jsonFile: null } }
 
       const ids = balances.map( b => ObjectId( b.refId ))
