@@ -63,7 +63,7 @@ export class sftpSender extends Construct {
       vpcSubnets: { onePerAz: true },
     })
 
-    secrets.push( secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-secret-suraSftp`, `sura_sftp` ))
+    secrets.push( secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-secret-suraSftp`, `sura_sftp_${props.environment}` ))
 
     for ( const secret of secrets )
       secret.grantRead( lambda )
