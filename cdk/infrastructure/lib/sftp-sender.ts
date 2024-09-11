@@ -2,7 +2,7 @@
 import * as cdk from 'aws-cdk-lib'
 import * as ec2 from 'aws-cdk-lib/aws-ec2'
 import * as aws_lambda from 'aws-cdk-lib/aws-lambda'
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
+import { ISecret } from 'aws-cdk-lib/aws-secretsmanager'
 import { Construct } from 'constructs'
 
 import { CustomProps, LAYERS_VERSIONS, SHORT_ENVIRONMENTS } from './custom-props'
@@ -13,15 +13,15 @@ export interface sftpSenderProps extends CustomProps {
     region: string;
     account: string;
     vpc: ec2.IVpc;
-    sftpSecrets: secretsmanager.ISecret[],
-    securityGroup: ec2.ISecurityGroup
+    securityGroup: ec2.ISecurityGroup;
+    secrets: ISecret[];
 }
 
 export class sftpSender extends Construct {
 
   constructor( scope: Construct, id: string, props: sftpSenderProps ) {
     super( scope, id )
-    const { vpc, applicationName, region, account, sftpSecrets: secrets } = props
+    const { vpc, applicationName, region, account, secrets } = props
 
     const lambdaStarterMsLib = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-ms-lib', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-ms-lib:${LAYERS_VERSIONS.get( props.environment )?.msLib}` )
     const awsSdk3S3Layer = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-aws-sdk3-s3', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-aws-sdk3-s3:${LAYERS_VERSIONS.get( props.environment )?.awsSdk3S3}` )
@@ -62,6 +62,7 @@ export class sftpSender extends Construct {
       allowPublicSubnet: false,
       vpcSubnets: { onePerAz: true },
     })
+
     for ( const secret of secrets )
       secret.grantRead( lambda )
   }
