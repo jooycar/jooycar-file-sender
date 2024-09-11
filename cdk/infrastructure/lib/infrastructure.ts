@@ -48,9 +48,7 @@ export class InfrastructureStack extends cdk.Stack {
       securityGroup,
 
     })
-    const sftpSecrets = [
-      secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-zurich-sftp`, `zurich__sftp__${SHORT_ENVIRONMENTS.get( environment )}` ),
-    ]
+
     new sftpSender( this, `${applicationName}-sftp-sender-lambda`, {
       environment: props.environment,
       vpcId,
@@ -59,9 +57,9 @@ export class InfrastructureStack extends cdk.Stack {
       account: accountId,
       region,
       vpc: privateVpc,
-      sftpSecrets,
       securityGroup,
     })
+
     new suraFileSender( this, `${applicationName}-sura-file-sender-lambda`, {
       environment: props.environment,
       vpcId,

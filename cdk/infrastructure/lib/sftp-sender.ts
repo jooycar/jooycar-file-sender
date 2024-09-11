@@ -13,7 +13,6 @@ export interface sftpSenderProps extends CustomProps {
     region: string;
     account: string;
     vpc: ec2.IVpc;
-    sftpSecrets: secretsmanager.ISecret[],
     securityGroup: ec2.ISecurityGroup
 }
 
@@ -21,7 +20,7 @@ export class sftpSender extends Construct {
 
   constructor( scope: Construct, id: string, props: sftpSenderProps ) {
     super( scope, id )
-    const { vpc, applicationName, region, account, sftpSecrets: secrets } = props
+    const { vpc, applicationName, region, account } = props
 
     const lambdaStarterMsLib = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-ms-lib', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-ms-lib:${LAYERS_VERSIONS.get( props.environment )?.msLib}` )
     const awsSdk3S3Layer = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-aws-sdk3-s3', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-aws-sdk3-s3:${LAYERS_VERSIONS.get( props.environment )?.awsSdk3S3}` )
@@ -44,6 +43,11 @@ export class sftpSender extends Construct {
       lambdaStarterLayer,
     ]
 
+    const secrets = [
+      secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-zurich-sftp`, `zurich__sftp__${SHORT_ENVIRONMENTS.get( props.environment )}` ),
+      secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-sura-sftp`, `sura_sftp_${SHORT_ENVIRONMENTS.get( props.environment )}` ),
+    ]
+
     const lambda = new aws_lambda.Function( this, `${applicationName}-sftp-sender-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
       functionName: `${applicationName}-sftp-sender-${SHORT_ENVIRONMENTS.get( props.environment )}`,
       runtime: aws_lambda.Runtime.NODEJS_18_X,
@@ -62,8 +66,6 @@ export class sftpSender extends Construct {
       allowPublicSubnet: false,
       vpcSubnets: { onePerAz: true },
     })
-
-    secrets.push( secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-secret-suraSftp`, `sura_sftp_${props.environment}` ))
 
     for ( const secret of secrets )
       secret.grantRead( lambda )
