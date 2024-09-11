@@ -34,7 +34,7 @@ export class InfrastructureStack extends cdk.Stack {
     const pdfBuilderBucket = s3.Bucket.fromBucketName( this, `${applicationName}-pdf-builder-bucket`, `pdf-builder-${SHORT_ENVIRONMENTS.get( environment )}-documents` )
 
     const dataConfigSecrets = safeFetchEnvVar( 'DATA_CONFIG_SECRETS' ).split( ',' )
-    const secrets = dataConfigSecrets.map( s => secretsmanager.Secret.fromSecretNameV2( this, `MsContractProfile-Config-Secret-${s}`, s ))
+    const secrets = dataConfigSecrets.map( s => secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-Secret-${s}`, s ))
 
     const securityGroup = aws_ec2.SecurityGroup.fromSecurityGroupId( this, 'ppm-sg', securityGroupId )
 
@@ -54,7 +54,7 @@ export class InfrastructureStack extends cdk.Stack {
     })
 
     const sftpConfigSecrets = safeFetchEnvVar( 'SFTP_CONFIG_SECRETS' ).split( ',' )
-    const sftpSecrets = sftpConfigSecrets.map( s => secretsmanager.Secret.fromSecretNameV2( this, `MsContractProfile-Config-Secret-${s}`, s ))
+    const sftpSecrets = sftpConfigSecrets.map( s => secretsmanager.Secret.fromSecretNameV2( this, `${applicationName}-Secret-${s}`, s ))
 
     new sftpSender( this, `${applicationName}-sftp-sender-lambda`, {
       environment: props.environment,
