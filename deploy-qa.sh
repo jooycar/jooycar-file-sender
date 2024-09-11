@@ -18,7 +18,7 @@ select_environment() {
     export VPC_ID="vpc-1837817d"
     export SG_ID="sg-0779b43e4e07ca2c8"
     export HANDLER_CONFIG_BUCKET="jooycar-apps-configs"
-    export DATA_CONFIG_SECRETS="prod__redis_url,prod__mongodb_url__rw,qa__mongodb_url__ro"
+    export DATA_CONFIG_SECRETS="prod__redis_url,prod__mongodb_url__rw,prod__mongodb_url__ro"
     export SFTP_CONFIG_SECRETS="zurich__sftp__prod,sura_sftp_prod"
   elif [ "$ENV" == "QA" ]; then
     export VPC_ID="vpc-1837817d"
