@@ -43,12 +43,9 @@ const handleFileWrite = ( file, filename ) => {
   const extension = path.extname( filename ).toLowerCase()
   const localPath = path.join( os.tmpdir(), filename )
 
-  console.log({ extension })
-
   if ( extension === '.xlsx' || extension === '.xls' )
     fileBuffer = Buffer.isBuffer( file ) ? file : Buffer.from( file, 'base64' )
-
-  if ( extension === '.csv' )
+  else
     fileBuffer = Buffer.from( file )
 
   fs.writeFileSync( localPath, fileBuffer )
