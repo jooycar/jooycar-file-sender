@@ -38,6 +38,19 @@ const sendToSFtpFn = async( filename, credentials, remotePath, attempts = 2, por
   })
 }
 
+const handleFileWrite = ( file, filename ) => {
+  let fileBuffer
+  const extension = path.extname( filename ).toLowerCase()
+  const localPath = path.join( os.tmpdir(), filename )
+
+  if ( extension === '.xlsx' || extension === '.xls' )
+    fileBuffer = Buffer.isBuffer( file ) ? file : Buffer.from( file, 'base64' )
+  else
+    fileBuffer = Buffer.from( file )
+
+  fs.writeFileSync( localPath, fileBuffer )
+}
+
 module.exports = async deps => {
   const { config } = deps
   const { name } = config.get( 'handler' )
@@ -52,15 +65,16 @@ module.exports = async deps => {
     const sftpConfig = JSON.parse( SecretString )
     const { serverUrl, port, user, pass } = sftpConfig
     const { filename, remotePath } = metadata
-    const localPath = path.join( os.tmpdir(), filename )
-    fs.writeFileSync( localPath, file )
-    const credentials = {
-      host: serverUrl,
-      username: user,
-      password: pass,
-    }
 
     try {
+      handleFileWrite( file, filename )
+
+      const credentials = {
+        host: serverUrl,
+        username: user,
+        password: pass,
+      }
+
       const { percent, error = '' } = await sendToSFtpFn( filename, credentials, remotePath, port )
 
       const response = ( percent === 0 ) ? error : `Report ${filename} file uploaded successfully`
