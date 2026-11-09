@@ -16,6 +16,10 @@ export const LAYERS_VERSIONS = new Map([
     lambdaStarter: 5
   } ],
 ])
+// Topic SNS para alarmas (delta-monitor -> AWS Chatbot -> Slack). Sin entrada = sin alarmas (QA).
+export const ALARMS_TOPICS = new Map([
+  [ 'production', 'delta-monitor' ],
+])
 export const SHORT_ENVIRONMENTS = new Map([
   [ 'production', 'prod' ],
   [ 'qa', 'qa' ],

@@ -21,6 +21,8 @@ export interface s3ReaderProps extends CustomProps {
 }
 
 export class s3Reader extends Construct {
+  public readonly lambda: aws_lambda.Function
+  public readonly functionName: string
 
   constructor( scope: Construct, id: string, props: s3ReaderProps ) {
     super( scope, id )
@@ -50,8 +52,9 @@ export class s3Reader extends Construct {
     const sftpLambda = aws_lambda.Function.fromFunctionArn( this, 'sftp-sender', `arn:aws:lambda:${region}:${account}:function:${applicationName}-sftp-sender-${SHORT_ENVIRONMENTS.get( props.environment )}` )
     const suraFileLambda = aws_lambda.Function.fromFunctionArn( this, 'sura-file-sender', `arn:aws:lambda:${region}:${account}:function:${applicationName}-sura-file-sender-${SHORT_ENVIRONMENTS.get( props.environment )}` )
 
+    this.functionName = `${applicationName}-s3-reader-${SHORT_ENVIRONMENTS.get( props.environment )}`
     const lambda = new aws_lambda.Function( this, `${applicationName}-s3-reader-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
-      functionName: `${applicationName}-s3-reader-${SHORT_ENVIRONMENTS.get( props.environment )}`,
+      functionName: this.functionName,
       runtime: aws_lambda.Runtime.NODEJS_18_X,
       code: aws_lambda.Code.fromDockerBuild( path.join( __dirname, '../../..' ), {
         buildArgs: {
@@ -68,6 +71,7 @@ export class s3Reader extends Construct {
       allowPublicSubnet: false,
       vpcSubnets: { onePerAz: true },
     })
+    this.lambda = lambda
     sftpLambda.grantInvoke( lambda )
     suraFileLambda.grantInvoke( lambda )
     dataSecretsBucket.grantReadWrite( lambda )
