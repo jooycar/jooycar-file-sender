@@ -16,8 +16,10 @@ const ALGORITHMS = {
   serverHostKey: { append: [ 'ssh-rsa', 'ssh-dss' ] },
 }
 
+// `remotePath` is the full remote file path (e.g. `Jooycar/ENTRADA/<filename>`),
+// same semantics as the previous sftp-upload client, which used it verbatim.
 const sendToSFtpFn = async( { filename, localPath, credentials, remotePath }, attempts = 3 ) => {
-  const remoteFile = path.posix.join( remotePath, filename )
+  const remoteFile = remotePath
   const sftp = new SftpClient()
 
   try {
