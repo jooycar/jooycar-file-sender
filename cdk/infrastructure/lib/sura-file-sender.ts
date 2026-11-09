@@ -18,6 +18,7 @@ export interface suraFileSenderProps extends CustomProps {
 }
 
 export class suraFileSender extends Construct {
+  public readonly lambda: aws_lambda.Function
 
   constructor( scope: Construct, id: string, props: suraFileSenderProps ) {
     super( scope, id )
@@ -63,6 +64,8 @@ export class suraFileSender extends Construct {
       allowPublicSubnet: false,
       vpcSubnets: { onePerAz: true },
     })
+
+    this.lambda = lambda
 
     LogGroup.grantWrite( lambda )
 

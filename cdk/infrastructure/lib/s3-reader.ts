@@ -21,6 +21,7 @@ export interface s3ReaderProps extends CustomProps {
 }
 
 export class s3Reader extends Construct {
+  public readonly lambda: aws_lambda.Function
 
   constructor( scope: Construct, id: string, props: s3ReaderProps ) {
     super( scope, id )
@@ -68,6 +69,7 @@ export class s3Reader extends Construct {
       allowPublicSubnet: false,
       vpcSubnets: { onePerAz: true },
     })
+    this.lambda = lambda
     sftpLambda.grantInvoke( lambda )
     suraFileLambda.grantInvoke( lambda )
     dataSecretsBucket.grantReadWrite( lambda )

@@ -18,6 +18,7 @@ export interface sftpSenderProps extends CustomProps {
 }
 
 export class sftpSender extends Construct {
+  public readonly lambda: aws_lambda.Function
 
   constructor( scope: Construct, id: string, props: sftpSenderProps ) {
     super( scope, id )
@@ -62,6 +63,7 @@ export class sftpSender extends Construct {
       allowPublicSubnet: false,
       vpcSubnets: { onePerAz: true },
     })
+    this.lambda = lambda
 
     for ( const secret of secrets )
       secret.grantRead( lambda )
