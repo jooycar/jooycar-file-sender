@@ -101,6 +101,40 @@ describe( 'handlers/sftp-sender/processor', () => {
     expect( end.callCount ).to.equal( 3 )
   })
 
+  it( 'does not retry on authentication errors (ssh2-sftp-client message format)', async() => {
+    connect.rejects( new Error( 'getConnection: All configured authentication methods failed' ))
+    const processor = await buildProcessor()
+
+    const error = await processor.process( payload ).catch( e => e )
+
+    expect( error.message ).to.equal( 'getConnection: All configured authentication methods failed' )
+    expect( connect.callCount ).to.equal( 1 )
+    expect( put.called ).to.equal( false )
+    expect( end.callCount ).to.equal( 1 )
+    expect( fs.existsSync( localPath )).to.equal( false )
+  })
+
+  it( 'does not retry on authentication errors flagged by ssh2 level', async() => {
+    const authError = Object.assign( new Error( 'auth rejected' ), { level: 'client-authentication' })
+    connect.rejects( authError )
+    const processor = await buildProcessor()
+
+    const error = await processor.process( payload ).catch( e => e )
+
+    expect( error ).to.equal( authError )
+    expect( connect.callCount ).to.equal( 1 )
+  })
+
+  it( 'still retries non-authentication connection errors', async() => {
+    connect.onFirstCall().rejects( new Error( 'connect: Timed out while waiting for handshake' ))
+    const processor = await buildProcessor()
+
+    const result = await processor.process( payload )
+
+    expect( result.response.statusCode ).to.equal( 200 )
+    expect( connect.callCount ).to.equal( 2 )
+  })
+
   it( 'removes the temporary file on success', async() => {
     let existedDuringUpload = false
     put.callsFake( async local => {

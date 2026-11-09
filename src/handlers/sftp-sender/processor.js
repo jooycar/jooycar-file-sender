@@ -21,10 +21,18 @@ const DEFAULT_RETRY_DELAY_MS = 2000
 
 const sleep = ms => new Promise( resolve => setTimeout( resolve, ms ))
 
+// Wrong credentials won't fix themselves: retrying only adds failed logins and
+// may lock the account on servers with lockout policies (e.g. SURA).
+// ssh2-sftp-client@12 drops ssh2's `err.level = 'client-authentication'`
+// (fmtError builds a new Error copying only message/code), so match the message.
+const AUTH_ERROR_PATTERN = /All configured authentication methods failed/i
+const isAuthError = error => error?.level === 'client-authentication' || AUTH_ERROR_PATTERN.test( error?.message || '' )
+
 // `remotePath` is the full remote file path (e.g. `Jooycar/ENTRADA/<filename>`),
 // same semantics as the previous sftp-upload client, which used it verbatim.
 // Each attempt opens and always closes its own connection, with a growing
 // pause between attempts (retryDelayMs, 2x retryDelayMs, ...).
+// Authentication errors are not retried.
 const sendToSFtpFn = async({ filename, localPath, credentials, remotePath, retryDelayMs = DEFAULT_RETRY_DELAY_MS }) => {
   for ( let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++ ) {
     const sftp = new SftpClient()
@@ -43,6 +51,10 @@ const sendToSFtpFn = async({ filename, localPath, credentials, remotePath, retry
 
       return
     } catch ( error ) {
+      if ( isAuthError( error )) {
+        console.error( `Authentication failed sending ${filename}, not retrying` )
+        throw error
+      }
       if ( attempt === MAX_ATTEMPTS ) throw error
       console.log( `Error sending ${filename}:`, error.message )
       await sleep( retryDelayMs * attempt )
