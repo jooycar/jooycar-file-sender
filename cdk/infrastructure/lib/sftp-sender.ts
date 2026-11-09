@@ -26,7 +26,7 @@ export class sftpSender extends Construct {
     const lambdaStarterMsLib = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-ms-lib', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-ms-lib:${LAYERS_VERSIONS.get( props.environment )?.msLib}` )
     const awsSdk3S3Layer = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-aws-sdk3-s3', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-aws-sdk3-s3:${LAYERS_VERSIONS.get( props.environment )?.awsSdk3S3}` )
     const standardsLayer = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-standards', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-standards:${LAYERS_VERSIONS.get( props.environment )?.standards}` )
-    const sftpUpload = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-sftpUpload', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-sftpUpload:${LAYERS_VERSIONS.get( props.environment )?.sftpUpload}` )
+    const ssh2SftpClient = aws_lambda.LayerVersion.fromLayerVersionArn( this, 'lambda-layers-ssh2-sftp-client', `arn:aws:lambda:${region}:${account}:layer:lambda-layers-ssh2-sftp-client:${LAYERS_VERSIONS.get( props.environment )?.ssh2SftpClient}` )
 
     const lambdaStarterLayer = aws_lambda.LayerVersion.fromLayerVersionArn(
       this,
@@ -40,7 +40,7 @@ export class sftpSender extends Construct {
       lambdaStarterMsLib,
       awsSdk3S3Layer,
       standardsLayer,
-      sftpUpload,
+      ssh2SftpClient,
       lambdaStarterLayer,
     ]
 
