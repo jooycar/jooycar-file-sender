@@ -7,7 +7,6 @@ import { Construct } from 'constructs'
 
 export interface LambdaErrorAlarmProps {
   lambda: aws_lambda.IFunction;
-  functionName: string;
   topic: sns.ITopic;
   description: string;
 }
@@ -19,10 +18,10 @@ export interface LambdaErrorAlarmProps {
 export class LambdaErrorAlarm extends Construct {
   constructor( scope: Construct, id: string, props: LambdaErrorAlarmProps ) {
     super( scope, id )
-    const { lambda, functionName, topic, description } = props
+    const { lambda, topic, description } = props
 
     const alarm = new cloudwatch.Alarm( this, 'errors-alarm', {
-      alarmName: `${functionName} (Errors)`,
+      alarmName: `${lambda.functionName} (Errors)`,
       alarmDescription: description,
       metric: lambda.metricErrors({
         period: cdk.Duration.minutes( 5 ),

@@ -70,27 +70,7 @@ export class InfrastructureStack extends cdk.Stack {
       secrets: sftpSecrets,
     })
 
-    // DJ-1680: alarmas de errores (solo en entornos con topic configurado, hoy production)
-    const alarmsTopicName = ALARMS_TOPICS.get( environment )
-    if ( alarmsTopicName ) {
-      const alarmsTopic = sns.Topic.fromTopicArn( this, `${applicationName}-alarms-topic`, `arn:aws:sns:${region}:${accountId}:${alarmsTopicName}` )
-
-      new LambdaErrorAlarm( this, `${applicationName}-sftp-sender-errors-alarm`, {
-        lambda: sftpSenderLambda.lambda,
-        functionName: sftpSenderLambda.functionName,
-        topic: alarmsTopic,
-        description: 'Falló un envío por SFTP (reportes de altas SURA, Sura_leads, Chilena, etc.). Revisar logs de la lambda para ver el archivo y el error. Ver DJ-1679.',
-      })
-
-      new LambdaErrorAlarm( this, `${applicationName}-s3-reader-errors-alarm`, {
-        lambda: s3ReaderLambda.lambda,
-        functionName: s3ReaderLambda.functionName,
-        topic: alarmsTopic,
-        description: 'Falló s3-reader (lectura del archivo en S3 o invocación de la estrategia de envío). Revisar logs de la lambda.',
-      })
-    }
-
-    new suraFileSender( this, `${applicationName}-sura-file-sender-lambda`, {
+    const suraFileSenderLambda = new suraFileSender( this, `${applicationName}-sura-file-sender-lambda`, {
       environment: props.environment,
       vpcId,
       securityGroupId,
@@ -101,6 +81,31 @@ export class InfrastructureStack extends cdk.Stack {
       secrets,
       securityGroup,
     })
+
+    // DJ-1680: alarmas de errores (solo en entornos con topic configurado, hoy production)
+    const alarmsTopicName = ALARMS_TOPICS.get( environment )
+    if ( alarmsTopicName ) {
+      const alarmsTopic = sns.Topic.fromTopicArn( this, `${applicationName}-alarms-topic`, `arn:aws:sns:${region}:${accountId}:${alarmsTopicName}` )
+
+      new LambdaErrorAlarm( this, `${applicationName}-sftp-sender-errors-alarm`, {
+        lambda: sftpSenderLambda.lambda,
+        topic: alarmsTopic,
+        description: 'Falló un envío por SFTP (reportes de altas SURA, Sura_leads, Chilena, etc.). Revisar logs de la lambda para ver el archivo y el error. Ver DJ-1679.',
+      })
+
+      new LambdaErrorAlarm( this, `${applicationName}-s3-reader-errors-alarm`, {
+        lambda: s3ReaderLambda.lambda,
+        topic: alarmsTopic,
+        description: 'Falló s3-reader (lectura del archivo en S3 o invocación de la estrategia de envío). Revisar logs de la lambda.',
+      })
+
+      new LambdaErrorAlarm( this, `${applicationName}-sura-file-sender-errors-alarm`, {
+        lambda: suraFileSenderLambda.lambda,
+        topic: alarmsTopic,
+        description: 'Falló sura-file-sender (envío de archivos a SURA vía s3-reader). Revisar logs de la lambda.',
+      })
+    }
+
     new zurichReportTrigger( this, `${applicationName}-zurich-report-trigger-lambda`, {
       environment: props.environment,
       vpcId,

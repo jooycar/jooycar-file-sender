@@ -19,7 +19,6 @@ export interface sftpSenderProps extends CustomProps {
 
 export class sftpSender extends Construct {
   public readonly lambda: aws_lambda.Function
-  public readonly functionName: string
 
   constructor( scope: Construct, id: string, props: sftpSenderProps ) {
     super( scope, id )
@@ -46,9 +45,8 @@ export class sftpSender extends Construct {
       lambdaStarterLayer,
     ]
 
-    this.functionName = `${applicationName}-sftp-sender-${SHORT_ENVIRONMENTS.get( props.environment )}`
     const lambda = new aws_lambda.Function( this, `${applicationName}-sftp-sender-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
-      functionName: this.functionName,
+      functionName: `${applicationName}-sftp-sender-${SHORT_ENVIRONMENTS.get( props.environment )}`,
       runtime: aws_lambda.Runtime.NODEJS_18_X,
       code: aws_lambda.Code.fromDockerBuild( path.join( __dirname, '../../..' ), {
         buildArgs: {

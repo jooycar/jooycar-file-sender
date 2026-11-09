@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib'
-import { Template } from 'aws-cdk-lib/assertions'
+import { Match, Template } from 'aws-cdk-lib/assertions'
 import * as aws_lambda from 'aws-cdk-lib/aws-lambda'
 import * as sns from 'aws-cdk-lib/aws-sns'
 
@@ -19,7 +19,6 @@ const buildStack = () => {
 
   new LambdaErrorAlarm( stack, 'alarm', {
     lambda,
-    functionName: 'jooycar-file-sender-sftp-sender-prod',
     topic,
     description: 'test',
   })
@@ -32,7 +31,8 @@ test( 'crea alarma de Errors (>= 1 en 5 min) que notifica al topic', () => {
 
   template.resourceCountIs( 'AWS::CloudWatch::Alarm', 1 )
   template.hasResourceProperties( 'AWS::CloudWatch::Alarm', {
-    AlarmName: 'jooycar-file-sender-sftp-sender-prod (Errors)',
+    // El nombre sale de lambda.functionName (Ref al nombre explícito de la función)
+    AlarmName: { 'Fn::Join': [ '', [ { Ref: Match.stringLikeRegexp( '^fn' ) }, ' (Errors)' ] ] },
     Namespace: 'AWS/Lambda',
     MetricName: 'Errors',
     Statistic: 'Sum',
