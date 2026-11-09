@@ -16,30 +16,39 @@ const ALGORITHMS = {
   serverHostKey: { append: [ 'ssh-rsa', 'ssh-dss' ] },
 }
 
+const MAX_ATTEMPTS = 3
+const DEFAULT_RETRY_DELAY_MS = 2000
+
+const sleep = ms => new Promise( resolve => setTimeout( resolve, ms ))
+
 // `remotePath` is the full remote file path (e.g. `Jooycar/ENTRADA/<filename>`),
 // same semantics as the previous sftp-upload client, which used it verbatim.
-const sendToSFtpFn = async( { filename, localPath, credentials, remotePath }, attempts = 3 ) => {
-  const remoteFile = remotePath
-  const sftp = new SftpClient()
+// Each attempt opens and always closes its own connection, with a growing
+// pause between attempts (retryDelayMs, 2x retryDelayMs, ...).
+const sendToSFtpFn = async({ filename, localPath, credentials, remotePath, retryDelayMs = DEFAULT_RETRY_DELAY_MS }) => {
+  for ( let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++ ) {
+    const sftp = new SftpClient()
 
-  try {
-    console.log( `Sending ${filename} to ${remoteFile}` )
-    await sftp.connect({
-      host: credentials.host,
-      port: credentials.port || 22,
-      username: credentials.username,
-      password: credentials.password,
-      readyTimeout: 20000,
-      algorithms: ALGORITHMS,
-    })
-    await sftp.put( localPath, remoteFile )
-  } catch ( error ) {
-    if ( attempts <= 1 ) throw error
-    console.log( `Error sending ${filename}, retrying (${attempts - 1} left):`, error.message )
+    try {
+      console.log( `Sending ${filename} to ${remotePath} (attempt ${attempt}/${MAX_ATTEMPTS})` )
+      await sftp.connect({
+        host: credentials.host,
+        port: credentials.port,
+        username: credentials.username,
+        password: credentials.password,
+        readyTimeout: 20000,
+        algorithms: ALGORITHMS,
+      })
+      await sftp.put( localPath, remotePath )
 
-    return sendToSFtpFn({ filename, localPath, credentials, remotePath }, attempts - 1 )
-  } finally {
-    await sftp.end().catch(() => {})
+      return
+    } catch ( error ) {
+      if ( attempt === MAX_ATTEMPTS ) throw error
+      console.log( `Error sending ${filename}:`, error.message )
+      await sleep( retryDelayMs * attempt )
+    } finally {
+      await sftp.end().catch(() => {})
+    }
   }
 }
 
@@ -47,8 +56,6 @@ const handleFileWrite = ( file, filename ) => {
   const extension = path.extname( filename ).toLowerCase()
   const localPath = path.join( os.tmpdir(), filename )
   let fileBuffer
-
-  console.log({ extension })
 
   if ( extension === '.xlsx' || extension === '.xls' )
     fileBuffer = Buffer.isBuffer( file ) ? file : Buffer.from( file, 'base64' )
@@ -61,7 +68,7 @@ const handleFileWrite = ( file, filename ) => {
 }
 
 module.exports = async deps => {
-  const { config } = deps
+  const { config, retryDelayMs } = deps
   const { name } = config.get( 'handler' )
   const client = new SecretsManagerClient({})
   const processEvent = async payload => {
@@ -81,12 +88,13 @@ module.exports = async deps => {
 
       const credentials = {
         host: serverUrl,
-        port,
+        // Until DJ-1679 the secret's port was never used (always 22): normalize it
+        port: Number( port ) || 22,
         username: user,
         password: pass,
       }
 
-      await sendToSFtpFn({ filename, localPath, credentials, remotePath })
+      await sendToSFtpFn({ filename, localPath, credentials, remotePath, retryDelayMs })
 
       return {
         response: {
