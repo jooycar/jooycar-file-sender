@@ -6,6 +6,7 @@ export const LAYERS_VERSIONS = new Map([
     msLib: 15,
     standards: 12,
     sftpUpload: 9,
+    ssh2SftpClient: 15,
     lambdaStarter: 5
   } ],
   [ 'qa', {
@@ -13,6 +14,7 @@ export const LAYERS_VERSIONS = new Map([
     msLib: 15,
     standards: 12,
     sftpUpload: 9,
+    ssh2SftpClient: 15,
     lambdaStarter: 5
   } ],
 ])
