@@ -8,7 +8,7 @@ module.exports = async deps => {
 
   const processEvent = async _payload => {
     //get actual date in format YYYY_MM_DD
-    const date = luxon.DateTime.local().setZone( 'America/Santiago' ).minus({ days: 1 }).toFormat( 'yyyy_MM_dd' )
+    const date = luxon.DateTime.local().setZone( 'America/Santiago' ).toFormat( 'yyyy_MM_dd' )
     const file = `${date}_${filename}`
     const payload = {
       s3: {

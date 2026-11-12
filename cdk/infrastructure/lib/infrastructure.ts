@@ -118,7 +118,7 @@ export class InfrastructureStack extends cdk.Stack {
       secrets,
       securityGroup,
     })
-    new suraEeccTrigger( this, `${applicationName}-sura-eecc-trigger-lambda`, {
+    const suraEeccTriggerLambda = new suraEeccTrigger( this, `${applicationName}-sura-eecc-trigger-lambda`, {
       environment: props.environment,
       vpcId,
       securityGroupId,
@@ -131,5 +131,16 @@ export class InfrastructureStack extends cdk.Stack {
       securityGroup,
       paramsEventRule: { minute: '00', hour: '09', day: '07', month: '*', year: '*' },
     })
+
+    // GJ-9223: alarma del envío mensual de EECC a SURA (incluye timeouts)
+    if ( alarmsTopicName ) {
+      const alarmsTopic = sns.Topic.fromTopicArn( this, `${applicationName}-eecc-alarms-topic`, `arn:aws:sns:${region}:${accountId}:${alarmsTopicName}` )
+
+      new LambdaErrorAlarm( this, `${applicationName}-sura-eecc-trigger-errors-alarm`, {
+        lambda: suraEeccTriggerLambda.lambda,
+        topic: alarmsTopic,
+        description: 'Falló sura-eecc-trigger (envío mensual de EECC a SURA, día 7). Puede ser timeout o error de Mongo. No reintenta sola: revisar logs y relanzar a mano. Los EECC individuales que fallan alarman en s3-reader.',
+      })
+    }
   }
 }
