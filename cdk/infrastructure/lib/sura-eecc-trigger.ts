@@ -21,6 +21,7 @@ export interface suraEeccTriggerProps extends CustomProps {
 }
 
 export class suraEeccTrigger extends Construct {
+  public readonly lambda: aws_lambda.Function
 
   constructor( scope: Construct, id: string, props: suraEeccTriggerProps ) {
     super( scope, id )
@@ -51,7 +52,7 @@ export class suraEeccTrigger extends Construct {
 
     const s3ReaderLambda = aws_lambda.Function.fromFunctionArn( this, 's3-reader', `arn:aws:lambda:${region}:${account}:function:${applicationName}-s3-reader-${SHORT_ENVIRONMENTS.get( props.environment )}` )
 
-    const lambda = new aws_lambda.Function( this, `${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
+    const lambda = this.lambda = new aws_lambda.Function( this, `${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}`, {
       functionName: `${applicationName}-sura-eecc-trigger-${SHORT_ENVIRONMENTS.get( props.environment )}`,
       runtime: aws_lambda.Runtime.NODEJS_18_X,
       code: aws_lambda.Code.fromDockerBuild( path.join( __dirname, '../../..' ), {
@@ -68,6 +69,8 @@ export class suraEeccTrigger extends Construct {
       layers: layers,
       allowPublicSubnet: false,
       vpcSubnets: { onePerAz: true },
+      // Sin reintentos automáticos: cada reintento vuelve a subir todos los EECC desde el inicio (GJ-9223)
+      retryAttempts: 0,
     })
     s3ReaderLambda.grantInvoke( lambda )
     LogGroup.grantWrite( lambda )

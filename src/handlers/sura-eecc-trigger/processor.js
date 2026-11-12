@@ -85,11 +85,8 @@ module.exports = async deps => {
     } catch ( e ) {
       console.error( e )
 
-      return {
-        response: {
-          statusCode: 500,
-        },
-      }
+      // Se relanza para que la falla cuente en la métrica Errors y dispare la alarma (GJ-9223)
+      throw e
     }
   }
 
