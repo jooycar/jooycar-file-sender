@@ -30,8 +30,9 @@ module.exports = ( apiUrl, apiKey, container ) => {
 
       return /^20\d/.test( response.status )
     } catch ( e ) {
-      console.error( e.response.data )
-      throw new Error( JSON.stringify( e.response.data ))
+      const errorDetail = e.response?.data !== undefined ? e.response.data : e.message
+      console.error( errorDetail )
+      throw new Error( typeof errorDetail === 'string' ? errorDetail : JSON.stringify( errorDetail ))
     }
   }
 }

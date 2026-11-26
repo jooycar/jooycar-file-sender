@@ -28,7 +28,21 @@ const s3readerFn = ({ bucket, documentGroup, strategy, secret, handler, results,
       Payload: JSON.stringify( payload ),
     })
 
-    await lambdaClient.send( command )
+    const invokeResponse = await lambdaClient.send( command )
+    if ( invokeResponse?.FunctionError ) {
+      throw new Error( `Downstream lambda ${lambda} failed (${invokeResponse.FunctionError})` )
+    }
+
+    if ( invokeResponse?.Payload ) {
+      const rawPayload = new TextDecoder( 'utf-8' ).decode( invokeResponse.Payload )
+      if ( rawPayload ) {
+        const parsed = JSON.parse( rawPayload )
+        const statusCode = parsed?.response?.statusCode ?? parsed?.statusCode
+        if ( typeof statusCode === 'number' && statusCode >= 400 ) {
+          throw new Error( `Downstream lambda ${lambda} returned statusCode ${statusCode}` )
+        }
+      }
+    }
 
     log.info( `${filename} uploaded successfully` )
 
@@ -45,14 +59,14 @@ module.exports = async deps => {
   const ObjectId = M.models.base.Types.ObjectId
   const Balance = M.models.model( 'Balance' )
   const InsurancePolicy = M.models.model( 'InsurancePolicy' )
-  const NOW = DateTime.now().setZone( 'America/Santiago' )
-  const PERIOD = NOW.minus({ months: 1 }).toFormat( 'yyyy-MM' )
   const { name, bucket, lambda, strategy, secret, documentGroup, BATCH_SIZE } = config.get( 'handler' )
   const lambdaClient = new LambdaClient({ })
-  const results = { errors: 0, succes: 0 }
-  const s3reader = s3readerFn({ bucket, documentGroup, strategy, secret, handler: name, results, lambda, lambdaClient, NOW, log })
 
   const processEvent = async _payload => {
+    const NOW = DateTime.now().setZone( 'America/Santiago' )
+    const PERIOD = NOW.minus({ months: 1 }).toFormat( 'yyyy-MM' )
+    const results = { errors: 0, succes: 0 }
+    const s3reader = s3readerFn({ bucket, documentGroup, strategy, secret, handler: name, results, lambda, lambdaClient, NOW, log })
     const query = {
       status: { $in: [ 'closed', 'paid' ] },
       'subType': 'premium',
